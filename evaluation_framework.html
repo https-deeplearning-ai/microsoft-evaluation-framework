@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluation Framework - DeepLearning.AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#237B94; --teal-dark:#1C6272; --teal-deep:#13424E;
+    --ink:#1A1A1A; --muted:#6B7280; --teal-tint:#EAF2F4;
+    --coral-text:#C8434C;
+    --rule:#E6EAED; --bg:#F4F6F7; --card:#FFFFFF;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:"Open Sans","Noto Sans",Arial,sans-serif; font-size:16.5px; line-height:1.5; }
+  h1,h2,h3,h4{ font-family:"Poppins",Arial,sans-serif; letter-spacing:-0.01em; }
+  .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+  /* header */
+  header{ background:var(--teal-deep); color:#fff; padding:20px 26px; position:relative; overflow:hidden; }
+  header h1{ font-size:26.4px; font-weight:700; margin:8px 0 2px; }
+  header p{ margin:0; color:#CFE3E8; font-size:15.4px; }
+  header .dot{ position:absolute; border-radius:50%; }
+
+  .wrap{ max-width:1180px; margin:0 auto; padding:20px 22px 40px; }
+  .grid{ display:grid; grid-template-columns:minmax(340px,1fr) minmax(420px,1.25fr); gap:20px; align-items:stretch; }
+  .grid > .s1{ grid-column:1; grid-row:1; }   /* section 1 and section 2 share row 1, so they match height */
+  .grid > .s2{ grid-column:2; grid-row:1; }
+  @media(max-width:860px){ .grid{ grid-template-columns:1fr; } .grid > .s1, .grid > .s2{ grid-column:auto; grid-row:auto; } }
+
+  .panel{ background:var(--card); border:1px solid var(--rule); border-radius:12px; padding:18px 20px; }
+  .panel > h2{ font-size:17.6px; margin:0 0 3px; color:var(--teal-deep); }
+  .panel .sub{ color:var(--muted); font-size:13.8px; margin:0 0 14px; }
+
+  /* sliders */
+  .slider{ margin:0 0 15px; }
+  .slider .top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px; }
+  .slider .name{ font-family:"Poppins",Arial,sans-serif; font-weight:600; font-size:14.9px; }
+  .slider .track{ display:flex; align-items:center; gap:8px; margin:6px 0 0; }
+  .slider .end{ flex:none; width:16px; text-align:center; font-family:"Poppins",Arial,sans-serif; font-weight:700; font-size:12.5px; color:var(--muted); }
+  .slider .rail{ position:relative; flex:1 1 auto; display:flex; align-items:center; height:28px; }
+  .slider .tick{ position:absolute; top:50%; width:6px; height:6px; border-radius:50%; background:rgba(28,98,114,.40); transform:translate(-50%,-50%); pointer-events:none; }
+  .slider .thumbnum{ position:absolute; top:50%; transform:translate(-50%,-50%); width:28px; height:28px; border-radius:50%; background:var(--teal); color:#fff; border:3px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.28); display:flex; align-items:center; justify-content:center; font-family:"Poppins",Arial,sans-serif; font-weight:700; font-size:13.5px; pointer-events:none; }
+  .slider .thumbnum.unset{ display:none; }   /* cleared after-Reset state: hide the value circle entirely until a slider is moved */
+  .slider .anchors{ display:flex; justify-content:space-between; font-size:12.1px; color:var(--muted); margin-top:3px; padding:0 24px; }
+  input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:6px; background:var(--teal-tint); outline:none; margin:0; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:28px; height:28px; border-radius:50%; background:transparent; border:none; cursor:pointer; }
+  input[type=range]::-moz-range-thumb{ width:28px; height:28px; border-radius:50%; background:transparent; border:none; cursor:pointer; }
+  input[type=range]:focus ~ .thumbnum{ box-shadow:0 0 0 3px rgba(35,123,148,.55), 0 1px 4px rgba(0,0,0,.28); }   /* keyboard focus ring (fallback: any focus) */
+  input[type=range]:focus:not(:focus-visible) ~ .thumbnum{ box-shadow:0 1px 4px rgba(0,0,0,.28); }   /* hide it for pointer focus where supported */
+
+  .btns{ display:flex; gap:10px; margin-top:6px; }
+  button{ font-family:"Poppins",Arial,sans-serif; font-weight:600; font-size:14.3px; border-radius:8px; padding:8px 14px; cursor:pointer; border:1px solid var(--rule); background:#fff; color:var(--ink); }
+  button.primary{ background:var(--teal); color:#fff; border-color:var(--teal); }
+  button.primary:hover{ background:var(--teal-dark); }
+  button:hover{ border-color:var(--teal); }
+</style>
+</head>
+<body>
+<header>
+  <div class="dot" style="width:150px;height:150px;background:rgba(246,91,102,.16);top:-70px;right:40px;"></div>
+  <div class="dot" style="width:100px;height:100px;background:rgba(35,123,148,.30);bottom:-60px;right:180px;"></div>
+  <h1>Evaluation Framework</h1>
+  <p>Score your project on six factors and get a recommended team composition, collaboration workflow, AI delegation level, and workflow process.</p>
+</header>
+
+<main class="wrap">
+<div class="grid">
+
+  <!-- INPUTS (section 1) -->
+  <section class="panel s1" aria-labelledby="s1h">
+    <h2 id="s1h">1 · Score your project</h2>
+    <p class="sub">Rate each factor 1–5 for this project.</p>
+    <div id="sliders"></div>
+    <div class="btns">
+      <button class="primary" id="resetBtn">Reset</button>
+    </div>
+  </section>
+
+  <!-- section 2: matrices -->
+  <section class="panel s2" aria-labelledby="s2h">
+    <h2 id="s2h">2 · Where you land</h2>
+    <p class="sub">The dot marks your current scores; the color is the recommendation.</p>
+    <div id="grids" style="display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:20px; align-items:start"></div>
+  </section>
+
+</div>
+</main>
+<div id="live" class="sr-only" aria-live="polite"></div>
+
+<script>
+const VARS = [
+  {key:"comp",  name:"Blast Radius",          lo:"Low Stakes",  hi:"Regulated"},
+  {key:"breadth",name:"Team Breadth",         lo:"Specialists", hi:"Generalists"},
+  {key:"decomp",name:"Coupling",              lo:"Parallelizable", hi:"Tightly coupled"},
+  {key:"speed", name:"Urgency",               lo:"Non-urgent",  hi:"Urgent"},
+  {key:"amb",   name:"Spec Ambiguity",        lo:"Crisp",       hi:"Unclear"},
+  {key:"rev",   name:"Reversibility",         lo:"Irreversible", hi:"Reversible"},
+];
+const state = {amb:3, rev:3, decomp:3, breadth:3, speed:3, comp:3};
+
+// build sliders
+const sc = document.getElementById("sliders");
+const THUMB=28;   // px; keep in sync with .thumbnum / range-thumb width in CSS
+function posThumb(key, v){
+  const el = document.getElementById("thumb_"+key);
+  if(!el) return;
+  const f = (v-1)/4;                       // 1..5 → 0..1
+  el.style.left = `calc(${f*100}% + ${(THUMB/2 - THUMB*f).toFixed(2)}px)`;  // thumb center
+  el.textContent = v;
+  const lo=document.getElementById("endlo_"+key), hi=document.getElementById("endhi_"+key);
+  if(lo) lo.style.visibility = (v==1)?"hidden":"visible";  // hide the end digit the thumb sits on
+  if(hi) hi.style.visibility = (v==5)?"hidden":"visible";
+}
+VARS.forEach(v=>{
+  const d = document.createElement("div"); d.className="slider";
+  d.innerHTML = `<div class="top"><span class="name" id="lbl_${v.key}">${v.name}</span></div>
+    <div class="track"><span class="end" id="endlo_${v.key}">1</span>
+      <div class="rail">
+        <input type="range" min="1" max="5" step="1" value="${state[v.key]}" id="rng_${v.key}" aria-labelledby="lbl_${v.key}" aria-valuetext="${state[v.key]} of 5, ${v.lo} to ${v.hi}">
+        ${[1,2,3,4,5].map(n=>{const f=(n-1)/4; return `<span class="tick" style="left:calc(${f*100}% + ${(THUMB/2-THUMB*f).toFixed(2)}px)"></span>`;}).join("")}
+        <div class="thumbnum" id="thumb_${v.key}">${state[v.key]}</div>
+      </div><span class="end" id="endhi_${v.key}">5</span></div>
+    <div class="anchors"><span>${v.lo}</span><span>${v.hi}</span></div>`;
+  sc.appendChild(d);
+  posThumb(v.key, state[v.key]);
+  const inp = d.querySelector("input");
+  inp.addEventListener("input", e=>{
+    state[v.key] = +e.target.value;
+    neutral = false;                       // any slider interaction leaves the cleared state, even if it lands on 3
+    posThumb(v.key, +e.target.value);
+    e.target.setAttribute("aria-valuetext", e.target.value+" of 5, "+v.lo+" to "+v.hi);
+    render();
+  });
+  // clicking the slider at its current value fires no 'input' event, so clear the cleared state on click too
+  inp.addEventListener("pointerdown", ()=>{ if(neutral){ neutral=false; render(); } });
+});
+
+function render(){
+  VARS.forEach(v=>{ const th=document.getElementById("thumb_"+v.key); if(th) th.classList.toggle('unset', neutral); });   // hide the value circle only in the cleared after-Reset state
+  drawGrids();
+}
+
+// ---- live decision grids (mirror the two-metric rules exactly) ----
+const GRIDS = [
+  { id:"composition", title:"Team composition", accent:"#237B94", xlab:"Blast Radius", xk:"comp", ylab:"Team Breadth", yk:"breadth",
+    outcome:(x,y)=> (y>=4&&x<=3)?'builder':((y===3&&x<=4)?'partner':((y>=4&&x===4)?'partner':((y<=2||x>=4)?'squad':'partner'))),
+    colors:{ builder:'#CFE3E8', partner:'#4E97AC', squad:'#1C6272' },
+    legend:[ {k:'builder',c:'#CFE3E8',t:'Builder-oriented team'}, {k:'partner',c:'#4E97AC',t:'PM–Engineer partnership'}, {k:'squad',c:'#1C6272',t:'Cross-functional squad'} ] },
+  { id:"workflow", title:"Collaboration workflow", accent:"#C8434C", xlab:"Coupling", xk:"decomp", ylab:"Urgency", yk:"speed",
+    outcome:(x,y)=> (x<=2&&y>=3)?'parallel':((x>=4||(x===3&&y>=3))?'iter':'seq'),
+    colors:{ parallel:'#D8434E', iter:'#F65B66', seq:'#FBD9DC' },
+    legend:[ {k:'seq',c:'#FBD9DC',t:'Sequential handoffs'}, {k:'iter',c:'#F65B66',t:'Iterative coauthoring'}, {k:'parallel',c:'#D8434E',t:'Parallel team collaboration'} ] },
+  { id:"owners", title:"AI delegation level", accent:"#A12F9D", xlab:"Blast Radius", xk:"comp", ylab:"Reversibility", yk:"rev",
+    outcome:(x,y)=> (y<=2||x>=4)?'human':((y>=4&&x<=2)?'ai':'ratify'),
+    colors:{ ai:'#F4E9F3', ratify:'#CE9BCB', human:'#A12F9D' },
+    legend:[ {k:'ai',c:'#F4E9F3',t:'AI decides'}, {k:'ratify',c:'#CE9BCB',t:'AI proposes, human ratifies'}, {k:'human',c:'#A12F9D',t:'Human decides'} ] },
+  { id:"process", title:"Workflow process", accent:"#1C74EB", xlab:"Spec Ambiguity", xk:"amb", ylab:"Reversibility", yk:"rev",
+    outcome:(x,y)=>{ if(x>=4&&y<=3) return 'spec'; if(x<=2&&y>=4) return 'demonstration'; if(x<=2) return 'test'; if(x>=4&&y>=4) return 'prompt'; return 'behavior'; },
+    colors:{ prompt:'#DCE9FB', demonstration:'#A8CBF0', spec:'#6BA3E3', behavior:'#3B72C4', test:'#1B4585' },
+    legend:[ {k:'prompt',c:'#DCE9FB',t:'Prompt-driven'}, {k:'demonstration',c:'#A8CBF0',t:'Demonstration-driven'}, {k:'spec',c:'#6BA3E3',t:'Spec-driven'}, {k:'behavior',c:'#3B72C4',t:'Behavior-driven'}, {k:'test',c:'#1B4585',t:'Test-driven'} ] },
+];
+function isDark(hex){                          // for the SVG marker ink (not contrast-bound)
+  const h=hex.replace('#',''); const r=parseInt(h.substr(0,2),16), g=parseInt(h.substr(2,2),16), b=parseInt(h.substr(4,2),16);
+  return (0.299*r+0.587*g+0.114*b) < 140;
+}
+function relLum(hex){ const h=hex.replace('#',''); const c=[0,2,4].map(i=>{ const v=parseInt(h.substr(i,2),16)/255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); }); return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2]; }
+function contrast(a,b){ const L1=relLum(a), L2=relLum(b); return (Math.max(L1,L2)+0.05)/(Math.min(L1,L2)+0.05); }
+function pickInk(bg){ return contrast(bg,'#000000') >= contrast(bg,'#ffffff') ? '#000' : '#fff'; }  // best-contrast pill text (WCAG), not a luminance threshold
+const FORCE_WHITE = new Set(['#4E97AC','#D8434E']);   // PM–Engineer partnership & Parallel team collaboration: white ink by design
+function inkFor(bg){ return FORCE_WHITE.has(bg) ? '#fff' : pickInk(bg); }   // used for both the pill text and the matrix dot, so they always match
+let liveTimer=null, prevPicks={}, seeded=false, neutral=false;   // neutral = the cleared state after clicking Reset only; any slider move clears it, even landing on all-3
+function announceChanges(picks){              // announce only the recommendations that changed; skip the initial load
+  if(!seeded){ seeded=true; picks.forEach(p=>{ prevPicks[p.title]=p.t; }); return; }
+  clearTimeout(liveTimer);
+  liveTimer=setTimeout(()=>{
+    const changed=picks.filter(p=>prevPicks[p.title]!==p.t);
+    if(!changed.length) return;
+    changed.forEach(p=>{ prevPicks[p.title]=p.t; });
+    const el=document.getElementById("live");
+    if(el) el.textContent=changed.map(p=>p.title+": "+p.t).join(". ")+".";
+  }, 450);
+}
+function drawGrids(){
+  const cell=26, grid=cell*5, padL=44, gy=18, W=padL+grid+8, H=gy+grid+32;
+  const anc = k => { const v=VARS.find(x=>x.key===k)||{lo:"",hi:""}; return [v.lo, v.hi]; };
+  let out="", picks=[];
+  GRIDS.forEach(g=>{
+    const mx=state[g.xk], my=state[g.yk];
+    // current recommendation for this matrix (matches the selected cell and the legend)
+    const pkey=g.outcome(mx,my), pcol=g.colors[pkey];
+    const pentry=g.legend.find(l=>l.k===pkey)||{t:""};
+    picks.push({title:g.title, t:pentry.t});
+    const pink=inkFor(pcol);
+    const pbd = isDark(pcol) ? 'transparent' : 'rgba(0,0,0,.14)';
+    const pill=neutral ? '' : `<div style="margin:1px 0 5px"><span style="display:inline-block;padding:2px 10px;border-radius:20px;border:1px solid ${pbd};font-family:Poppins,Arial,sans-serif;font-weight:600;font-size:11px;line-height:1.5;background:${pcol};color:${pink}">${pentry.t}</span></div>`;
+    let s=`<svg viewBox="0 14 ${W} ${H-14}" style="width:100%;max-width:200px;height:auto" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">`;
+    for(let xv=1;xv<=5;xv++)for(let yv=1;yv<=5;yv++){
+      const col=g.colors[g.outcome(xv,yv)];
+      const rx=padL+(xv-1)*cell, ry=gy+(5-yv)*cell;
+      s+=`<rect x="${rx}" y="${ry}" width="${cell}" height="${cell}" fill="${col}" stroke="#fff" stroke-width="1.1"/>`;
+      if(!neutral && xv===mx&&yv===my){
+        const ink = inkFor(col);   // same colour as the pill text (so the dot and pill always match)
+        s+=`<rect x="${rx+1.5}" y="${ry+1.5}" width="${cell-3}" height="${cell-3}" fill="none" stroke="${ink}" stroke-width="2.5"/>`;
+        s+=`<circle cx="${rx+cell/2}" cy="${ry+cell/2}" r="3.4" fill="${ink}"/>`;
+      }
+    }
+    const [xlo,xhi]=anc(g.xk), [ylo,yhi]=anc(g.yk);
+    // x-axis: factor name (no arrow) with low / high anchors at the ends
+    s+=`<text x="${padL+grid/2}" y="${gy+grid+13}" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-weight="600" font-size="9.9" fill="#17242A">${g.xlab}</text>`;
+    s+=`<text x="${padL}" y="${gy+grid+24}" text-anchor="start" font-family="'Open Sans',Arial,sans-serif" font-size="9" fill="#5B6A71">${xlo}</text>`;
+    s+=`<text x="${padL+grid}" y="${gy+grid+24}" text-anchor="end" font-family="'Open Sans',Arial,sans-serif" font-size="9" fill="#5B6A71">${xhi}</text>`;
+    // y-axis: factor name (no arrow) with low (bottom) / high (top) anchors
+    s+=`<text transform="translate(11,${gy+grid/2}) rotate(-90)" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-weight="600" font-size="9.9" fill="#17242A">${g.ylab}</text>`;
+    s+=`<text transform="translate(26,${gy+grid-2}) rotate(-90)" text-anchor="start" font-family="'Open Sans',Arial,sans-serif" font-size="9" fill="#5B6A71">${ylo}</text>`;
+    s+=`<text transform="translate(26,${gy+2}) rotate(-90)" text-anchor="end" font-family="'Open Sans',Arial,sans-serif" font-size="9" fill="#5B6A71">${yhi}</text>`;
+    s+=`</svg>`;
+    const leg = g.legend.map(l=>`<div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:#3a4a52;line-height:1.35;margin:2px 0"><span style="width:11px;height:11px;border-radius:2px;background:${l.c};border:1px solid rgba(0,0,0,.10);flex:none"></span>${l.t}</div>`).join("");
+    out+=`<div style="text-align:center; display:flex; flex-direction:column; align-items:center"><div style="font-family:Poppins,Arial,sans-serif;font-weight:600;font-size:12px;color:${g.accent};margin-bottom:1px;white-space:nowrap">${g.title}</div>${pill}${s}<div style="text-align:left;margin-top:8px;min-height:92px">${leg}</div></div>`;
+  });
+  document.getElementById("grids").innerHTML=out;
+  if(neutral){
+    // seed the baseline to the current all-3 picks without announcing, and clear any stale live text,
+    // so the first slider move away from reset announces the grids that actually change
+    seeded=true; picks.forEach(p=>{ prevPicks[p.title]=p.t; });
+    const el=document.getElementById("live"); if(el) el.textContent="";
+  } else {
+    announceChanges(picks);
+  }
+}
+
+
+function setAll(vals){
+  Object.keys(vals).forEach(k=>{
+    state[k]=vals[k];
+    const vv = VARS.find(x=>x.key===k);
+    const rng = document.getElementById("rng_"+k);
+    rng.value=vals[k];
+    rng.setAttribute("aria-valuetext", vals[k]+" of 5, "+vv.lo+" to "+vv.hi);
+    posThumb(k, vals[k]);
+  });
+  render();
+}
+function resetAll(){ neutral=true; setAll({amb:3, rev:3, decomp:3, breadth:3, speed:3, comp:3}); }
+document.getElementById("resetBtn").addEventListener("click", resetAll);
+
+render();
+</script>
+</body>
+</html>
